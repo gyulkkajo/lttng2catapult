@@ -10,26 +10,32 @@ from lttngtrace.view import *
 
 class Converter:
 
-    def __init__(self, trace_path, out_file):
+    def __init__(self, trace_path):
         self.col = babeltrace.TraceCollection()
         self.add_trace_path(trace_path)
 
-        self.views = [CPUView(0)]
-
-        self.loopEachView()
-        
-        json_sum = []
-        for i in self.views:
-            json_sum += i.dump()
-
-        with open(out_file, 'w') as fp:
-            json.dump(json_sum, fp, indent='  ')
-            
-    def add_trace_path(self, trace_path, fmt='ctf'):
-        return self.col.add_traces_recursive(trace_path, fmt)
-
-    def loopEachView(self):
+        self.views = [CPUView(-1), ProcessView()]
 
         for i in self.col.events:
             for view in self.views:
                 view.add_event(i)
+
+        self.ctp_obj = {
+            'traceEvents': [],
+            'displayTimeUnit': 'ms',
+            'otherData': {
+                'version': 'This version'
+            }}
+        
+        ctp_evnts = self.ctp_obj['traceEvents']
+        for i in self.views:
+            ctp_evnts += i.to_ctp()
+
+
+    def add_trace_path(self, trace_path, fmt='ctf'):
+        return self.col.add_traces_recursive(trace_path, fmt)
+
+    def export(self, ofile):
+        logging.info('Export: %s' % ofile)
+        with open(ofile, 'w') as fp:
+            json.dump(self.ctp_obj, fp, indent='  ')

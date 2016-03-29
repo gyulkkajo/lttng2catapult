@@ -18,7 +18,7 @@ if __name__ == "__main__":
     
     args = argParser.parse_args()
     
-    conv = lttngtrace.converter.Converter(args.input, args.output)
-#     ee = loadLttngFile(args.input, args.output)
+    conv = lttngtrace.converter.Converter(args.input)
+    conv.export(args.output)
 
     print ("Done")
